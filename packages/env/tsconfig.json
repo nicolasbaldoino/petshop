@@ -1,0 +1,6 @@
+{
+  "extends": "@petshop/typescript-config/library.json",
+  "include": [
+    "index.ts"
+  ]
+}
