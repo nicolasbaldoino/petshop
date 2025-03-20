@@ -7,14 +7,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id        String  @id @default(uuid())
+  name      String
+  slug      String  @unique
+  avatarUrl String? @map("avatar_url")
+
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @map("owner_id")
+
+  templates      Template[]
+  customers      Customer[]
+  employees      Employee[]
+  pets           Pet[]
+  species        Species[]
+  breeds         Breed[]
+  furs           Fur[]
+  appointments   Appointment[]
+  services       Service[]
+  boxes          Box[]
+  medicalRecords MedicalRecord[]
+  inpatientStays InpatientStay[]
+  careSchedules  CareSchedule[]
+  departments    Department[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
 model User {
   id       String  @id @default(uuid())
   username String?
   email    String?
   password String
 
-  customer Customer?
-  employee Employee?
+  owns_organizations Organization[]
+  customer           Customer?
+  employee           Employee?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -37,7 +68,7 @@ model Customer {
   id                Int           @id @default(autoincrement())
   name              String
   documentType      DocumentType? @map("document_type")
-  document          String        @unique
+  document          String?
   rg                String?
   tradeName         String?       @map("trade_name")
   corporateName     String?       @map("corporate_name")
@@ -50,8 +81,10 @@ model Customer {
   phone             String?
   whatsapp          String?
   icmsContributor   String?       @map("icms_contributor")
-
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique @map("user_id")
@@ -76,8 +109,10 @@ model Employee {
   phone          String?
   whatsapp       String?
   crmv           String?
-
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique @map("user_id")
@@ -86,8 +121,8 @@ model Employee {
   addressId Int?     @unique @map("address_id")
 
   appointments Appointment[]
+  departments  Department[]
   // roles          Role[]
-  // departments    Department[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -116,6 +151,21 @@ model Address {
   @@map("addresses")
 }
 
+model Department {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+
+  employees Employee[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("departments")
+}
+
 model Pet {
   id            Int                  @id @default(autoincrement())
   name          String
@@ -125,8 +175,10 @@ model Pet {
   gender        PetGender?
   status        PetStatus?
   sterilization SterilizationStatus?
-
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   species   Species? @relation(fields: [speciesId], references: [id])
   speciesId Int?     @map("species_id")
@@ -154,6 +206,9 @@ model Species {
   name        String
   description String?
 
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+
   pets Pet[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -167,6 +222,9 @@ model Breed {
   name        String
   description String?
 
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+
   pets Pet[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -179,6 +237,9 @@ model Fur {
   id          Int     @id @default(autoincrement())
   name        String
   description String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   pets Pet[]
 
@@ -208,8 +269,10 @@ model Appointment {
   entryTime DateTime
   duration  Int
   price     Float
-
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   employee   Employee @relation(fields: [employeeId], references: [id])
   employeeId Int      @map("employee_id")
@@ -233,6 +296,9 @@ model Service {
   name        String
   description String?
 
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+
   appointments Appointment[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -244,7 +310,10 @@ model Service {
 model Box {
   id       Int    @id @default(autoincrement())
   name     String
-  capacity Int
+  capacity Int    @default(1)
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   pets           Pet[]
   inpatientStays InpatientStay[]
@@ -257,10 +326,12 @@ model Box {
 
 model MedicalRecord {
   id       Int    @id @default(autoincrement())
-  type     String // TODO: enum
-  metadata Json
-
+  type     String // TODO: enum (care_schedule, medical_record, inpatient_stay)
+  metadata Json // instance of the template
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   pet   Pet @relation(fields: [petId], references: [id])
   petId Int @map("pet_id")
@@ -273,9 +344,11 @@ model MedicalRecord {
 
 model InpatientStay {
   id       Int  @id @default(autoincrement())
-  metadata Json
-
+  metadata Json // instance of the template
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   pet   Pet @relation(fields: [petId], references: [id])
   petId Int @map("pet_id")
@@ -293,12 +366,14 @@ model InpatientStay {
 
 model CareSchedule {
   id            Int      @id @default(autoincrement())
-  type          String // TODO: enum
-  frequencyType String   @map("frequency_type") // TODO: (daily, once, as_needed)
+  type          String // TODO: enum (care_schedule, medical_record, inpatient_stay)
+  frequencyType String   @map("frequency_type") // TODO: enum (daily, once, as_needed)
   date          DateTime
-  metadata      Json
-
+  metadata      Json // instance of the template
   // ...obs
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   inpatientStay   InpatientStay @relation(fields: [inpatientStayId], references: [id])
   inpatientStayId Int           @map("inpatient_stay_id")
@@ -314,6 +389,9 @@ model Template {
   name   String
   type   String // TODO: enum (care_schedule, medical_record, inpatient_stay)
   fields Json // { name: string, description: string, type: string, required: boolean }
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
