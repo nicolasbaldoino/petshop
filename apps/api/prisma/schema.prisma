@@ -8,7 +8,315 @@ datasource db {
 }
 
 model User {
-  id    String  @id @default(uuid())
-  name  String?
-  email String  @unique
+  id       String  @id @default(uuid())
+  username String?
+  email    String?
+  password String
+
+  customer Customer?
+  employee Employee?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum DocumentType {
+  CPF
+  CNPJ
+  FOREIGN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model Customer {
+  id                Int           @id @default(autoincrement())
+  name              String
+  documentType      DocumentType? @map("document_type")
+  document          String        @unique
+  rg                String?
+  tradeName         String?       @map("trade_name")
+  corporateName     String?       @map("corporate_name")
+  stateRegistration String?       @map("state_registration")
+  emailGeneral      String?       @map("email_general")
+  emailMarketing    String?       @map("email_marketing")
+  emailFinancial    String?       @map("email_financial")
+  birthDate         DateTime?     @map("birth_date")
+  gender            Gender?
+  phone             String?
+  whatsapp          String?
+  icmsContributor   String?       @map("icms_contributor")
+
+  // ...obs
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique @map("user_id")
+
+  address   Address? @relation(fields: [addressId], references: [id])
+  addressId Int?     @unique @map("address_id")
+
+  pets         Pet[]
+  appointments Appointment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("customers")
+}
+
+model Employee {
+  id             Int     @id @default(autoincrement())
+  name           String
+  corporateEmail String? @map("corporate_email")
+  photo          String?
+  phone          String?
+  whatsapp       String?
+  crmv           String?
+
+  // ...obs
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique @map("user_id")
+
+  address   Address? @relation(fields: [addressId], references: [id])
+  addressId Int?     @unique @map("address_id")
+
+  appointments Appointment[]
+  // roles          Role[]
+  // departments    Department[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("employees")
+}
+
+model Address {
+  id           Int     @id @default(autoincrement())
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  country      String?
+  zipCode      String? @map("zip_code")
+  reference    String?
+
+  customer Customer?
+  employee Employee?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("addresses")
+}
+
+model Pet {
+  id            Int                  @id @default(autoincrement())
+  name          String
+  photo         String?
+  birthDate     DateTime?            @map("birth_date")
+  weight        String?
+  gender        PetGender?
+  status        PetStatus?
+  sterilization SterilizationStatus?
+
+  // ...obs
+
+  species   Species? @relation(fields: [speciesId], references: [id])
+  speciesId Int?     @map("species_id")
+
+  breed   Breed? @relation(fields: [breedId], references: [id])
+  breedId Int?   @map("breed_id")
+
+  fur   Fur? @relation(fields: [furId], references: [id])
+  furId Int? @map("fur_id")
+
+  owners         Customer[]
+  appointments   Appointment[]
+  boxes          Box[]
+  inpatientStays InpatientStay[]
+  medicalRecords MedicalRecord[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pets")
+}
+
+model Species {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  pets Pet[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("species")
+}
+
+model Breed {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  pets Pet[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("breeds")
+}
+
+model Fur {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  pets Pet[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("furs")
+}
+
+enum PetGender {
+  MALE
+  FEMALE
+}
+
+enum PetStatus {
+  ALIVE
+  DECEASED
+}
+
+enum SterilizationStatus {
+  NEUTERED
+  INTACT
+}
+
+model Appointment {
+  id        Int      @id @default(autoincrement())
+  entryTime DateTime
+  duration  Int
+  price     Float
+
+  // ...obs
+
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int      @map("employee_id")
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId Int      @map("customer_id")
+
+  pet   Pet @relation(fields: [petId], references: [id])
+  petId Int @map("pet_id")
+
+  services Service[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("appointments")
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("services")
+}
+
+model Box {
+  id       Int    @id @default(autoincrement())
+  name     String
+  capacity Int
+
+  pets           Pet[]
+  inpatientStays InpatientStay[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("boxes")
+}
+
+model MedicalRecord {
+  id       Int    @id @default(autoincrement())
+  type     String // TODO: enum
+  metadata Json
+
+  // ...obs
+
+  pet   Pet @relation(fields: [petId], references: [id])
+  petId Int @map("pet_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("medical_records")
+}
+
+model InpatientStay {
+  id       Int  @id @default(autoincrement())
+  metadata Json
+
+  // ...obs
+
+  pet   Pet @relation(fields: [petId], references: [id])
+  petId Int @map("pet_id")
+
+  box   Box @relation(fields: [boxId], references: [id])
+  boxId Int @map("box_id")
+
+  careSchedules CareSchedule[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("inpatient_stays")
+}
+
+model CareSchedule {
+  id            Int      @id @default(autoincrement())
+  type          String // TODO: enum
+  frequencyType String   @map("frequency_type") // TODO: (daily, once, as_needed)
+  date          DateTime
+  metadata      Json
+
+  // ...obs
+
+  inpatientStay   InpatientStay @relation(fields: [inpatientStayId], references: [id])
+  inpatientStayId Int           @map("inpatient_stay_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("care_schedules")
+}
+
+model Template {
+  id     Int    @id @default(autoincrement())
+  name   String
+  type   String // TODO: enum (care_schedule, medical_record, inpatient_stay)
+  fields Json // { name: string, description: string, type: string, required: boolean }
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("templates")
 }
