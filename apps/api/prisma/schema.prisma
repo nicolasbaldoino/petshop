@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Organization {
+model Workspace {
   id        String  @id @default(uuid())
   name      String
   slug      String  @unique
@@ -34,7 +34,7 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("organizations")
+  @@map("workspaces")
 }
 
 model User {
@@ -43,9 +43,9 @@ model User {
   email    String?
   password String
 
-  owns_organizations Organization[]
-  customer           Customer?
-  employee           Employee?
+  owns_workspaces Workspace[]
+  customer        Customer?
+  employee        Employee?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -83,8 +83,8 @@ model Customer {
   icmsContributor   String?       @map("icms_contributor")
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique @map("user_id")
@@ -111,8 +111,8 @@ model Employee {
   crmv           String?
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique @map("user_id")
@@ -155,8 +155,8 @@ model Department {
   id   Int    @id @default(autoincrement())
   name String
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   employees Employee[]
 
@@ -177,8 +177,8 @@ model Pet {
   sterilization SterilizationStatus?
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   species   Species? @relation(fields: [speciesId], references: [id])
   speciesId Int?     @map("species_id")
@@ -206,8 +206,8 @@ model Species {
   name        String
   description String?
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pets Pet[]
 
@@ -222,8 +222,8 @@ model Breed {
   name        String
   description String?
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pets Pet[]
 
@@ -238,8 +238,8 @@ model Fur {
   name        String
   description String?
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pets Pet[]
 
@@ -271,8 +271,8 @@ model Appointment {
   price     Float
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   employee   Employee @relation(fields: [employeeId], references: [id])
   employeeId Int      @map("employee_id")
@@ -296,8 +296,8 @@ model Service {
   name        String
   description String?
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   appointments Appointment[]
 
@@ -312,8 +312,8 @@ model Box {
   name     String
   capacity Int    @default(1)
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pets           Pet[]
   inpatientStays InpatientStay[]
@@ -330,8 +330,8 @@ model MedicalRecord {
   metadata Json // instance of the template
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pet   Pet @relation(fields: [petId], references: [id])
   petId Int @map("pet_id")
@@ -347,8 +347,8 @@ model InpatientStay {
   metadata Json // instance of the template
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   pet   Pet @relation(fields: [petId], references: [id])
   petId Int @map("pet_id")
@@ -372,8 +372,8 @@ model CareSchedule {
   metadata      Json // instance of the template
   // ...obs
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   inpatientStay   InpatientStay @relation(fields: [inpatientStayId], references: [id])
   inpatientStayId Int           @map("inpatient_stay_id")
@@ -390,8 +390,8 @@ model Template {
   type   String // TODO: enum (care_schedule, medical_record, inpatient_stay)
   fields Json // { name: string, description: string, type: string, required: boolean }
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String       @map("organization_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
