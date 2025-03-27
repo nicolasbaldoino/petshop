@@ -2,9 +2,12 @@ import { env } from '@petshop/env'
 import type { FastifyInstance } from 'fastify'
 import { ZodError } from 'zod'
 
+import { BadRequestError } from '@/use-cases/errors/bad-request-error'
+import { UnauthorizedError } from '@/use-cases/errors/unauthorized-error'
+
 type FastifyErrorHandler = FastifyInstance['errorHandler']
 
-export const errorHandler: FastifyErrorHandler = (error, request, reply) => {
+export const errorHandler:  FastifyErrorHandler = (error, request, reply) => {
   if (error instanceof ZodError) {
     reply.status(400).send({
       message: 'Validation error',
@@ -12,17 +15,17 @@ export const errorHandler: FastifyErrorHandler = (error, request, reply) => {
     })
   }
 
-  //   if (error instanceof BadRequestError) {
-  //     reply.status(400).send({
-  //       message: error.message,
-  //     })
-  //   }
+  if (error instanceof BadRequestError) {
+    reply.status(400).send({
+      message: error.message,
+    })
+  }
 
-  //   if (error instanceof UnauthorizedError) {
-  //     reply.status(401).send({
-  //       message: error.message,
-  //     })
-  //   }
+  if (error instanceof UnauthorizedError) {
+    reply.status(401).send({
+      message: error.message,
+    })
+  }
 
   if (env.NODE_ENV !== 'production') {
     console.error(error)

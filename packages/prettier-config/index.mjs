@@ -16,5 +16,5 @@ const config = {
   endOfLine: 'auto',
   bracketSameLine: false,
 }
- 
+
 export default config

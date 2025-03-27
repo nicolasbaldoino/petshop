@@ -11,14 +11,15 @@ model Workspace {
   id        String  @id @default(uuid())
   name      String
   slug      String  @unique
+  domain    String? @unique
   avatarUrl String? @map("avatar_url")
 
   owner   User   @relation(fields: [ownerId], references: [id])
-  ownerId String @map("owner_id")
+  ownerId String @unique @map("owner_id")
 
-  templates      Template[]
   customers      Customer[]
   employees      Employee[]
+  departments    Department[]
   pets           Pet[]
   species        Species[]
   breeds         Breed[]
@@ -29,7 +30,7 @@ model Workspace {
   medicalRecords MedicalRecord[]
   inpatientStays InpatientStay[]
   careSchedules  CareSchedule[]
-  departments    Department[]
+  templates      Template[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -37,15 +38,57 @@ model Workspace {
   @@map("workspaces")
 }
 
-model User {
-  id       String  @id @default(uuid())
-  username String?
-  email    String?
-  password String
+enum TokenType {
+  PASSWORD_RECOVER
+}
 
-  owns_workspaces Workspace[]
-  customer        Customer?
-  employee        Employee?
+model Token {
+  id   String    @id @default(uuid())
+  type TokenType
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String?   @map("customer_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tokens")
+}
+
+enum AccountProvider {
+  GOOGLE
+  APPLE
+  MICROSOFT
+}
+
+model Account {
+  id                String          @id @default(uuid())
+  provider          AccountProvider
+  providerAccountId String          @unique @map("provider_account_id")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String?   @map("customer_id")
+
+  @@unique([provider, userId])
+  @@unique([provider, customerId])
+  @@map("accounts")
+}
+
+model User {
+  id           String  @id @default(uuid())
+  name         String?
+  email        String  @unique
+  passwordHash String? @map("password_hash")
+  avatarUrl    String? @map("avatar_url")
+
+  workspace Workspace?
+  tokens    Token[]
+  accounts  Account[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -65,8 +108,11 @@ enum Gender {
 }
 
 model Customer {
-  id                Int           @id @default(autoincrement())
-  name              String
+  id                String        @id @default(uuid())
+  name              String?
+  email             String        @unique
+  passwordHash      String?       @map("password_hash")
+  avatarUrl         String?       @map("avatar_url")
   documentType      DocumentType? @map("document_type")
   document          String?
   rg                String?
@@ -81,53 +127,62 @@ model Customer {
   phone             String?
   whatsapp          String?
   icmsContributor   String?       @map("icms_contributor")
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
 
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String? @unique @map("user_id")
-
   address   Address? @relation(fields: [addressId], references: [id])
   addressId Int?     @unique @map("address_id")
 
+  tokens       Token[]
+  accounts     Account[]
   pets         Pet[]
   appointments Appointment[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([workspaceId, email])
   @@map("customers")
 }
 
 model Employee {
-  id             Int     @id @default(autoincrement())
+  id             String  @id @default(uuid())
   name           String
+  email          String
+  passwordHash   String  @map("password_hash")
   corporateEmail String? @map("corporate_email")
   photo          String?
   phone          String?
   whatsapp       String?
   crmv           String?
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
 
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String? @unique @map("user_id")
-
   address   Address? @relation(fields: [addressId], references: [id])
   addressId Int?     @unique @map("address_id")
 
+  permissions  Permission[]
   appointments Appointment[]
   departments  Department[]
-  // roles          Role[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([workspaceId, email])
   @@map("employees")
+}
+
+// TODO: Add permissions
+model Permission {
+  id          String @id @default(uuid())
+  name        String
+  description String
+
+  employees Employee[]
+
+  @@map("permissions")
 }
 
 model Address {
@@ -166,6 +221,21 @@ model Department {
   @@map("departments")
 }
 
+enum PetGender {
+  MALE
+  FEMALE
+}
+
+enum PetStatus {
+  ALIVE
+  DECEASED
+}
+
+enum SterilizationStatus {
+  NEUTERED
+  INTACT
+}
+
 model Pet {
   id            Int                  @id @default(autoincrement())
   name          String
@@ -175,7 +245,6 @@ model Pet {
   gender        PetGender?
   status        PetStatus?
   sterilization SterilizationStatus?
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
@@ -249,36 +318,20 @@ model Fur {
   @@map("furs")
 }
 
-enum PetGender {
-  MALE
-  FEMALE
-}
-
-enum PetStatus {
-  ALIVE
-  DECEASED
-}
-
-enum SterilizationStatus {
-  NEUTERED
-  INTACT
-}
-
 model Appointment {
   id        Int      @id @default(autoincrement())
   entryTime DateTime
   duration  Int
   price     Float
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
 
   employee   Employee @relation(fields: [employeeId], references: [id])
-  employeeId Int      @map("employee_id")
+  employeeId String   @map("employee_id")
 
   customer   Customer @relation(fields: [customerId], references: [id])
-  customerId Int      @map("customer_id")
+  customerId String   @map("customer_id")
 
   pet   Pet @relation(fields: [petId], references: [id])
   petId Int @map("pet_id")
@@ -328,7 +381,6 @@ model MedicalRecord {
   id       Int    @id @default(autoincrement())
   type     String // TODO: enum (care_schedule, medical_record, inpatient_stay)
   metadata Json // instance of the template
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
@@ -345,7 +397,6 @@ model MedicalRecord {
 model InpatientStay {
   id       Int  @id @default(autoincrement())
   metadata Json // instance of the template
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
@@ -370,7 +421,6 @@ model CareSchedule {
   frequencyType String   @map("frequency_type") // TODO: enum (daily, once, as_needed)
   date          DateTime
   metadata      Json // instance of the template
-  // ...obs
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String    @map("workspace_id")
