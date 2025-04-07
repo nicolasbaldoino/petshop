@@ -11,7 +11,7 @@ export async function requestPasswordRecover(app: FastifyInstance) {
     {
       schema: {
         tags: ['[ERP] Auth'],
-        summary: 'Get authenticated user profile',
+        summary: 'Request password recover',
         body: z.object({
           slug: z.string(),
           email: z.string().email(),
@@ -42,6 +42,13 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         // We don't want to people to know if the user really exists
         return reply.status(201).send()
       }
+
+      await prisma.token.deleteMany({
+        where: {
+          type: 'PASSWORD_RECOVER',
+          userId: userFromEmail.id,
+        },
+      })
 
       const { id: code } = await prisma.token.create({
         data: {

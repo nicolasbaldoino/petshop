@@ -12,7 +12,7 @@ export async function resetPassword(app: FastifyInstance) {
     {
       schema: {
         tags: ['[Portal] Auth'],
-        summary: 'Get authenticated user profile',
+        summary: 'Reset password',
         body: z.object({
           code: z.string(),
           password: z.string().min(6),
@@ -26,7 +26,10 @@ export async function resetPassword(app: FastifyInstance) {
       const { code, password } = request.body
 
       const tokenFromCode = await prisma.token.findUnique({
-        where: { id: code },
+        where: {
+          id: code,
+          type: 'PASSWORD_RECOVER',
+        },
       })
 
       if (!tokenFromCode) {

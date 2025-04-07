@@ -3,7 +3,6 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 
 import { auth } from '@/http/middlewares/auth'
-import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
 import { prisma } from '@/lib/prisma'
 
 export async function updateWorkspace(app: FastifyInstance) {
@@ -31,10 +30,6 @@ export async function updateWorkspace(app: FastifyInstance) {
       async (request, reply) => {
         const { slug } = request.params
         const { workspace } = await request.getCurrentUser(slug)
-
-        if (!workspace) {
-          throw new BadRequestError('Workspace not found')
-        }
 
         const { name } = request.body
 

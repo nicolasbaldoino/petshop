@@ -41,6 +41,7 @@ model Workspace {
 
 enum TokenType {
   PASSWORD_RECOVER
+  EMAIL_VERIFICATION
 }
 
 model Token {
@@ -80,12 +81,13 @@ enum SystemType {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  name         String?
-  email        String
-  passwordHash String?    @map("password_hash")
-  avatarUrl    String?    @map("avatar_url")
-  systemType   SystemType @map("system_type")
+  id            String     @id @default(uuid())
+  name          String?
+  email         String
+  emailVerified DateTime?  @map("email_verified")
+  passwordHash  String?    @map("password_hash")
+  avatarUrl     String?    @map("avatar_url")
+  systemType    SystemType @map("system_type")
 
   workspace   Workspace? @relation(fields: [workspaceId], references: [id])
   workspaceId String?    @map("workspace_id")
@@ -116,10 +118,8 @@ enum Gender {
 }
 
 model Customer {
-  id    String @id @default(uuid())
-  name  String
-  email String @unique
-
+  id                String        @id @default(uuid())
+  name              String
   documentType      DocumentType? @map("document_type")
   document          String?
   rg                String?
@@ -150,15 +150,12 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([workspaceId, email])
   @@map("customers")
 }
 
 model Employee {
-  id    String @id @default(uuid())
-  name  String
-  email String @unique
-
+  id             String  @id @default(uuid())
+  name           String
   corporateEmail String? @map("corporate_email")
   photo          String?
   phone          String?
@@ -181,7 +178,6 @@ model Employee {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([workspaceId, email])
   @@map("employees")
 }
 

@@ -6,13 +6,13 @@ import { z } from 'zod'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
 import { prisma } from '@/lib/prisma'
 
-export async function resetPassword(app: FastifyInstance) {
+export async function createPassword(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
-    '/auth/password/reset',
+    '/auth/password/create',
     {
       schema: {
-        tags: ['[ERP] Auth'],
-        summary: 'Reset password',
+        tags: ['[Portal] Auth'],
+        summary: 'Create password',
         body: z.object({
           code: z.string(),
           password: z.string().min(6),
@@ -28,7 +28,7 @@ export async function resetPassword(app: FastifyInstance) {
       const tokenFromCode = await prisma.token.findUnique({
         where: {
           id: code,
-          type: 'PASSWORD_RECOVER',
+          type: 'EMAIL_VERIFICATION',
         },
       })
 
@@ -44,6 +44,7 @@ export async function resetPassword(app: FastifyInstance) {
             id: tokenFromCode.userId,
           },
           data: {
+            emailVerified: new Date(),
             passwordHash,
           },
         }),

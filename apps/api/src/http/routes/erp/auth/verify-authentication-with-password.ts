@@ -1,17 +1,17 @@
 import { SystemType } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { z } from 'zod'
+import z from 'zod'
 
 import { prisma } from '@/lib/prisma'
 
-export async function requestPasswordRecover(app: FastifyInstance) {
+export async function verifyAuthenticationWithPassword(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
-    '/auth/password/recover',
+    '/auth/sessions/password/verify',
     {
       schema: {
-        tags: ['[SaaS] Auth'],
-        summary: 'Request password recover',
+        tags: ['[ERP] Auth'],
+        summary: 'Verify authentication with email & password',
         body: z.object({
           slug: z.string(),
           email: z.string().email(),
@@ -34,32 +34,31 @@ export async function requestPasswordRecover(app: FastifyInstance) {
         where: {
           workspaceId: workspace?.id || null,
           email,
-          systemType: SystemType.SAAS,
+          systemType: SystemType.ERP,
         },
       })
 
-      if (!userFromEmail) {
-        // We don't want to people to know if the user really exists
+      if (!userFromEmail || userFromEmail?.emailVerified) {
         return reply.status(201).send()
       }
 
       await prisma.token.deleteMany({
         where: {
-          type: 'PASSWORD_RECOVER',
+          type: 'EMAIL_VERIFICATION',
           userId: userFromEmail.id,
         },
       })
 
       const { id: code } = await prisma.token.create({
         data: {
-          type: 'PASSWORD_RECOVER',
+          type: 'EMAIL_VERIFICATION',
           userId: userFromEmail.id,
         },
       })
 
-      // Send email with password recover link
+      // Send email with verification code
 
-      console.log('Password recover token:', code)
+      console.log('Verification code:', code)
 
       return reply.status(201).send()
     },
