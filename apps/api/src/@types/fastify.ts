@@ -1,20 +1,13 @@
-import 'fastify';
+import 'fastify'
 
-import type { Customer, Employee, User, Workspace } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client'
 
 declare module 'fastify' {
   export interface FastifyRequest {
-    getCurrentUserId(): Promise<string>
-    getCurrentUser(slug: string): Promise<{ workspace: Workspace; user: User }>
+    getAuthenticatedUserId(): Promise<string>
 
-    getCurrentEmployeeId(): Promise<string>
-    getCurrentEmployee(
+    getCurrentUser(
       slug: string,
-    ): Promise<{ workspace: Workspace; employee: Employee }>
-
-    getCurrentCustomerId(): Promise<string>
-    getCurrentCustomer(
-      slug: string,
-    ): Promise<{ workspace: Workspace; customer: Customer }>
+    ): Promise<{ workspace: Workspace | null; user: User }>
   }
 }

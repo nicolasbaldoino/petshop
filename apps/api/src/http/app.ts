@@ -13,6 +13,10 @@ import {
 
 import { errorHandler } from '@/http/error-handler'
 
+import { erpRoutes } from './routes/erp/routes'
+import { portalRoutes } from './routes/portal/routes'
+import { saasRoutes } from './routes/saas/routes'
+
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setSerializerCompiler(serializerCompiler)
@@ -49,3 +53,7 @@ app.register(fastifyJwt, {
 })
 
 app.register(fastifyCors)
+
+app.register(saasRoutes, { prefix: '/saas' })
+app.register(erpRoutes, { prefix: '/erp' })
+app.register(portalRoutes, { prefix: '/portal' })
