@@ -39,6 +39,10 @@ export const auth = fastifyPlugin(async (app: FastifyInstance) => {
         throw new UnauthorizedError('Workspace not found')
       }
 
+      if (!user.workspace.active) {
+        throw new UnauthorizedError('Workspace is inactive')
+      }
+
       const { workspace, ...userWithoutWorkspace } = user
 
       return {

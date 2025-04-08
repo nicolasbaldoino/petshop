@@ -8,11 +8,13 @@ datasource db {
 }
 
 model Workspace {
-  id        String  @id @default(uuid())
-  name      String
-  slug      String  @unique
-  // domain String? @unique
-  avatarUrl String? @map("avatar_url")
+  id           String  @id @default(uuid())
+  active       Boolean @default(true)
+  name         String
+  slug         String  @unique
+  avatarUrl    String? @map("avatar_url")
+  erpDomain    String? @unique @map("erp_domain")
+  portalDomain String? @unique @map("portal_domain")
 
   owner   User   @relation(name: "WorkspaceToUser", fields: [ownerId], references: [id])
   ownerId String @unique @map("owner_id")
@@ -120,6 +122,7 @@ enum Gender {
 model Customer {
   id                String        @id @default(uuid())
   name              String
+  avatarUrl         String?       @map("avatar_url")
   documentType      DocumentType? @map("document_type")
   document          String?
   rg                String?
@@ -156,8 +159,8 @@ model Customer {
 model Employee {
   id             String  @id @default(uuid())
   name           String
+  avatarUrl      String? @map("avatar_url")
   corporateEmail String? @map("corporate_email")
-  photo          String?
   phone          String?
   whatsapp       String?
   crmv           String?
@@ -246,7 +249,7 @@ enum SterilizationStatus {
 model Pet {
   id            Int                  @id @default(autoincrement())
   name          String
-  photo         String?
+  avatarUrl     String?              @map("avatar_url")
   birthDate     DateTime?            @map("birth_date")
   weight        String?
   gender        PetGender?

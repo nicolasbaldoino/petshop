@@ -5,6 +5,7 @@ import { createAccount } from './auth/create-account'
 import { getProfile } from './auth/get-profile'
 import { requestPasswordRecover } from './auth/request-password-recover'
 import { resetPassword } from './auth/reset-password'
+import { getWorkspaceBilling } from './billing/get-workspace-billing'
 import { createEmployee } from './employees/create-employee'
 import { getEmployees } from './employees/get-employees'
 import { createWorkspace } from './workspaces/create-workspace'
@@ -19,6 +20,8 @@ export async function saasRoutes(app: FastifyInstance) {
 
   app.register(createWorkspace)
   app.register(updateWorkspace)
+
+  app.register(getWorkspaceBilling)
 
   app.register(createEmployee)
   app.register(getEmployees)
