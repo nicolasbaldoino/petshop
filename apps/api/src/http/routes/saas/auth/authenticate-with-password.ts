@@ -36,7 +36,7 @@ export async function authenticateWithPassword(app: FastifyInstance) {
       })
 
       if (!workspace) {
-        throw new BadRequestError('Invalid credentials.')
+        throw new BadRequestError('Workspace not found.')
       }
 
       const userFromEmail = await prisma.user.findUnique({

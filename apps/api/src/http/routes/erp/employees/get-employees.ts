@@ -13,7 +13,7 @@ export async function getEmployees(app: FastifyInstance) {
       '/workspaces/:slug/employees',
       {
         schema: {
-          tags: ['[SaaS] Employees'],
+          tags: ['[ERP] Employees'],
           summary: 'Get all workspace employees',
           security: [{ bearerAuth: [] }],
           params: z.object({

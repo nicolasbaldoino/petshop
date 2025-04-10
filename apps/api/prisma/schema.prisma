@@ -129,14 +129,13 @@ model Customer {
   tradeName         String?       @map("trade_name")
   corporateName     String?       @map("corporate_name")
   stateRegistration String?       @map("state_registration")
-  emailGeneral      String?       @map("email_general")
-  emailMarketing    String?       @map("email_marketing")
-  emailFinancial    String?       @map("email_financial")
+  marketingEmail    String?       @map("marketing_email")
+  billingEmail      String?       @map("billing_email")
   birthDate         DateTime?     @map("birth_date")
   gender            Gender?
   phone             String?
   whatsapp          String?
-  icmsContributor   String?       @map("icms_contributor")
+  icmsContributor   Boolean?      @map("icms_contributor")
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique @map("user_id")

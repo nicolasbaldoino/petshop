@@ -31,11 +31,17 @@ export async function createAccount(app: FastifyInstance) {
         },
       })
 
-      const userWithSameEmail = await prisma.user.findFirst({
+      if (!workspace) {
+        throw new BadRequestError('Workspace not found.')
+      }
+
+      const userWithSameEmail = await prisma.user.findUnique({
         where: {
-          workspaceId: workspace?.id || null,
-          email,
-          systemType: SystemType.PORTAL,
+          workspaceId_email_systemType: {
+            workspaceId: workspace.id,
+            email,
+            systemType: SystemType.PORTAL,
+          },
         },
       })
 
@@ -45,12 +51,20 @@ export async function createAccount(app: FastifyInstance) {
 
       const passwordHash = await hash(password, 6)
 
-      await prisma.user.create({
+      const user = await prisma.user.create({
         data: {
-          name,
+          workspaceId: workspace.id,
           email,
           passwordHash,
           systemType: SystemType.PORTAL,
+        },
+      })
+
+      await prisma.customer.create({
+        data: {
+          workspaceId: workspace.id,
+          userId: user.id,
+          name,
         },
       })
 

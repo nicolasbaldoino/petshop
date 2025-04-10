@@ -1,3 +1,4 @@
+import { SystemType } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 
@@ -12,12 +13,19 @@ export const auth = fastifyPlugin(async (app: FastifyInstance) => {
 
         return sub
       } catch {
-        throw new UnauthorizedError('Invalid token')
+        throw new UnauthorizedError('Invalid token.')
       }
     }
 
     request.getCurrentUser = async (slug: string) => {
       const userId = await request.getAuthenticatedUserId()
+
+      const pathname = request.routerPath
+      const systemType = pathname.startsWith('/erp')
+        ? SystemType.ERP
+        : pathname.startsWith('/portal')
+          ? SystemType.PORTAL
+          : SystemType.SAAS
 
       const user = await prisma.user.findFirst({
         where: {
@@ -25,6 +33,7 @@ export const auth = fastifyPlugin(async (app: FastifyInstance) => {
           workspace: {
             slug,
           },
+          systemType,
         },
         include: {
           workspace: true,
@@ -32,15 +41,15 @@ export const auth = fastifyPlugin(async (app: FastifyInstance) => {
       })
 
       if (!user) {
-        throw new UnauthorizedError('User not found')
+        throw new UnauthorizedError('User not found.')
       }
 
       if (!user.workspace) {
-        throw new UnauthorizedError('Workspace not found')
+        throw new UnauthorizedError('Workspace not found.')
       }
 
       if (!user.workspace.active) {
-        throw new UnauthorizedError('Workspace is inactive')
+        throw new UnauthorizedError('Workspace is inactive.')
       }
 
       const { workspace, ...userWithoutWorkspace } = user

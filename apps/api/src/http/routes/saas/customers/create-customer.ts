@@ -7,16 +7,16 @@ import { auth } from '@/http/middlewares/auth'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
 import { prisma } from '@/lib/prisma'
 
-export async function createEmployee(app: FastifyInstance) {
+export async function createCustomer(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
     .post(
-      '/workspaces/:slug/employees',
+      '/workspaces/:slug/customers',
       {
         schema: {
-          tags: ['[SaaS] Employees'],
-          summary: 'Create a new employee',
+          tags: ['[SaaS] Customers'],
+          summary: 'Create a new customer',
           security: [{ bearerAuth: [] }],
           body: z.object({
             name: z.string(),
@@ -27,7 +27,7 @@ export async function createEmployee(app: FastifyInstance) {
           }),
           response: {
             201: z.object({
-              employeeId: z.string().uuid(),
+              customerId: z.string().uuid(),
             }),
           },
         },
@@ -43,7 +43,7 @@ export async function createEmployee(app: FastifyInstance) {
             workspaceId_email_systemType: {
               workspaceId: workspace.id,
               email,
-              systemType: SystemType.ERP,
+              systemType: SystemType.PORTAL,
             },
           },
         })
@@ -56,11 +56,11 @@ export async function createEmployee(app: FastifyInstance) {
           data: {
             workspaceId: workspace.id,
             email,
-            systemType: SystemType.ERP,
+            systemType: SystemType.PORTAL,
           },
         })
 
-        const employee = await prisma.employee.create({
+        const customer = await prisma.customer.create({
           data: {
             workspaceId: workspace.id,
             userId: user.id,
@@ -71,7 +71,7 @@ export async function createEmployee(app: FastifyInstance) {
         // TODO: Send email to user with login credentials
 
         return reply.status(201).send({
-          employeeId: employee.id,
+          customerId: customer.id,
         })
       },
     )

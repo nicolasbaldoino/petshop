@@ -15,12 +15,30 @@ export async function createEmployee(app: FastifyInstance) {
       '/workspaces/:slug/employees',
       {
         schema: {
-          tags: ['[SaaS] Employees'],
+          tags: ['[ERP] Employees'],
           summary: 'Create a new employee',
           security: [{ bearerAuth: [] }],
           body: z.object({
             name: z.string(),
             email: z.string().email(),
+            avatarUrl: z.string().url().nullish(),
+            corporateEmail: z.string().nullish(),
+            phone: z.string().nullish(),
+            whatsapp: z.string().nullish(),
+            crmv: z.string().nullish(),
+            address: z
+              .object({
+                street: z.string().nullish(),
+                number: z.string().nullish(),
+                complement: z.string().nullish(),
+                neighborhood: z.string().nullish(),
+                city: z.string().nullish(),
+                state: z.string().nullish(),
+                country: z.string().nullish(),
+                zipCode: z.string().nullish(),
+                reference: z.string().nullish(),
+              })
+              .nullish(),
           }),
           params: z.object({
             slug: z.string(),
@@ -36,7 +54,7 @@ export async function createEmployee(app: FastifyInstance) {
         const { slug } = request.params
         const { workspace } = await request.getCurrentUser(slug)
 
-        const { name, email } = request.body
+        const { name, email, ...data } = request.body
 
         const userByEmail = await prisma.user.findUnique({
           where: {
@@ -60,11 +78,31 @@ export async function createEmployee(app: FastifyInstance) {
           },
         })
 
+        const address = await prisma.address.create({
+          data: {
+            street: data.address?.street,
+            number: data.address?.number,
+            complement: data.address?.complement,
+            neighborhood: data.address?.neighborhood,
+            city: data.address?.city,
+            state: data.address?.state,
+            country: data.address?.country,
+            zipCode: data.address?.zipCode,
+            reference: data.address?.reference,
+          },
+        })
+
         const employee = await prisma.employee.create({
           data: {
             workspaceId: workspace.id,
             userId: user.id,
+            addressId: address.id,
             name,
+            avatarUrl: data.avatarUrl,
+            corporateEmail: data.corporateEmail,
+            phone: data.phone,
+            whatsapp: data.whatsapp,
+            crmv: data.crmv,
           },
         })
 

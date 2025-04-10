@@ -5,23 +5,23 @@ import { z } from 'zod'
 import { auth } from '@/http/middlewares/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function getEmployees(app: FastifyInstance) {
+export async function getCustomers(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
     .get(
-      '/workspaces/:slug/employees',
+      '/workspaces/:slug/customers',
       {
         schema: {
-          tags: ['[SaaS] Employees'],
-          summary: 'Get all workspace employees',
+          tags: ['[SaaS] Customers'],
+          summary: 'Get all workspace customers',
           security: [{ bearerAuth: [] }],
           params: z.object({
             slug: z.string(),
           }),
           response: {
             200: z.object({
-              employees: z.array(
+              customers: z.array(
                 z.object({
                   id: z.string().uuid(),
                   name: z.string(),
@@ -37,7 +37,7 @@ export async function getEmployees(app: FastifyInstance) {
         const { slug } = request.params
         const { workspace } = await request.getCurrentUser(slug)
 
-        const employees = await prisma.employee.findMany({
+        const customers = await prisma.customer.findMany({
           where: {
             workspaceId: workspace.id,
           },
@@ -52,7 +52,7 @@ export async function getEmployees(app: FastifyInstance) {
           },
         })
 
-        return reply.send({ employees })
+        return reply.send({ customers })
       },
     )
 }

@@ -5,6 +5,8 @@ import z from 'zod'
 
 import { prisma } from '@/lib/prisma'
 
+import { BadRequestError } from '../../_errors/bad-request-error'
+
 export async function verifyAuthenticationWithPassword(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
     '/auth/sessions/password/verify',
@@ -30,11 +32,17 @@ export async function verifyAuthenticationWithPassword(app: FastifyInstance) {
         },
       })
 
-      const userFromEmail = await prisma.user.findFirst({
+      if (!workspace) {
+        throw new BadRequestError('Workspace not found.')
+      }
+
+      const userFromEmail = await prisma.user.findUnique({
         where: {
-          workspaceId: workspace?.id || null,
-          email,
-          systemType: SystemType.PORTAL,
+          workspaceId_email_systemType: {
+            workspaceId: workspace.id,
+            email,
+            systemType: SystemType.PORTAL,
+          },
         },
       })
 
